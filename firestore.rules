@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HELPERS ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    // Auth tokens don't have custom claims by default. We check roles via profile.
+    function getUserData() {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : {};
+    }
+
+    function hasRole(role) {
+      return getUserData().get('role', '') == role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'parvvirmani07@gmail.com' ||
+        request.auth.token.email == 'admin@wizdent.system' ||
+        hasRole('ADMIN')
+      );
+    }
+    
+    function isManager() {
+      return isSignedIn() && (isAdmin() || hasRole('MANAGER'));
+    }
+
+    function isDealer() {
+      return isSignedIn() && hasRole('DEALER');
+    }
+
+    function canViewByTerritory(targetTerritory) {
+      let userTerritory = getUserData().get('territory', '');
+      return userTerritory != '' && 
+             targetTerritory is string && 
+             targetTerritory.size() >= userTerritory.size() && 
+             targetTerritory[0:userTerritory.size()] == userTerritory;
+    }
+
+    // --- VALIDATION HELPERS ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string && data.email is string &&
+             data.role in ['ADMIN', 'MANAGER', 'DEALER', 'CLINIC'];
+    }
+
+    function isValidAccount(data) {
+      return data.keys().hasAll(['name', 'type']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.type in ['CLINIC', 'DEALER'];
+    }
+
+    function isValidVisit(data) {
+      return data.keys().hasAll(['accountId', 'dealerId', 'dealerUid', 'visitType', 'dateTime']) &&
+             data.accountId is string && data.dealerId is string && data.dealerUid is string &&
+             data.visitType in ['SELL', 'DEMO', 'DEMO & SELL', 'Follow Up', 'Sampling', 'Promotion', 'Promotion and Sell'] &&
+             data.dateTime is string &&
+             (!data.keys().contains('territory') || data.territory is string);
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['name', 'code']) &&
+             data.name is string && data.code is string &&
+             data.name.size() > 0 && data.code.size() > 0;
+    }
+
+    // --- ACCESS RULES ---
+    
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin()) && isValidUser(incoming()) && isValidId(userId);
+      allow update: if isSignedIn() && isValidId(userId) && (
+        (request.auth.uid == userId && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    match /accounts/{accountId} {
+      allow read: if isSignedIn(); // Allow all signed in users to read accounts
+      allow create: if isSignedIn() && (isValidAccount(incoming()) || isAdmin());
+      allow update: if isManager() || isAdmin();
+      allow delete: if isAdmin();
+
+      match /contacts/{contactId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn();
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /{path=**}/contacts/{contactId} {
+      allow read: if isSignedIn();
+    }
+
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /visits/{visitId} {
+      allow read: if isSignedIn(); // Broaden read for visits, query filters handle view logic
+      allow create: if isSignedIn() && (incoming().dealerUid == request.auth.uid || isAdmin()) && isValidVisit(incoming());
+      allow update: if isSignedIn() && (existing().dealerUid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+
+      match /soldProducts/{soldId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && (get(/databases/$(database)/documents/visits/$(visitId)).data.dealerUid == request.auth.uid || isAdmin());
+        allow delete: if isAdmin();
+      }
+      match /demoProducts/{demoId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && (get(/databases/$(database)/documents/visits/$(visitId)).data.dealerUid == request.auth.uid || isAdmin());
+        allow delete: if isAdmin();
+      }
+      match /freeProducts/{freeId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && (get(/databases/$(database)/documents/visits/$(visitId)).data.dealerUid == request.auth.uid || isAdmin());
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // Catch-all for report collections or metadata
+    match /{path=**}/reports/{reportId} {
+      allow read: if isManager() || isAdmin();
+    }
+    
+    // Support for potential reports_general path (used in handleFirestoreError labels)
+    match /reports_general/{id} {
+      allow read: if isManager() || isAdmin();
+    }
+  }
+}

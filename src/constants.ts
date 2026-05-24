@@ -1,0 +1,68 @@
+export interface Territory {
+  code: string;
+  name: string;
+  region: string;
+  tier: 1 | 2;
+}
+
+export const TERRITORIES: Territory[] = [
+  // North
+  { code: 'DL01', name: 'Delhi - North', region: 'North', tier: 1 },
+  { code: 'DL02', name: 'Delhi - South', region: 'North', tier: 1 },
+  { code: 'DL03', name: 'Delhi - West', region: 'North', tier: 1 },
+  { code: 'DL04', name: 'Delhi - East', region: 'North', tier: 1 },
+  { code: 'DL05', name: 'Delhi - Central', region: 'North', tier: 1 },
+  { code: 'UP01', name: 'Lucknow', region: 'North', tier: 2 },
+  { code: 'UP02', name: 'Kanpur', region: 'North', tier: 2 },
+  { code: 'UP03', name: 'Noida/Ghaziabad', region: 'North', tier: 1 },
+  { code: 'PB01', name: 'Chandigarh/Mohali', region: 'North', tier: 2 },
+  { code: 'PB02', name: 'Ludhiana', region: 'North', tier: 2 },
+  { code: 'RJ01', name: 'Jaipur', region: 'North', tier: 2 },
+  
+  // West
+  { code: 'MH01', name: 'Mumbai - South', region: 'West', tier: 1 },
+  { code: 'MH02', name: 'Mumbai - Western Suburbs', region: 'West', tier: 1 },
+  { code: 'MH03', name: 'Mumbai - Eastern Suburbs', region: 'West', tier: 1 },
+  { code: 'MH04', name: 'Navi Mumbai', region: 'West', tier: 1 },
+  { code: 'MH05', name: 'Pune', region: 'West', tier: 1 },
+  { code: 'MH06', name: 'Nagpur', region: 'West', tier: 2 },
+  { code: 'GJ01', name: 'Ahmedabad', region: 'West', tier: 1 },
+  { code: 'GJ02', name: 'Surat', region: 'West', tier: 2 },
+  { code: 'MP01', name: 'Indore', region: 'West', tier: 2 },
+  { code: 'MP02', name: 'Bhopal', region: 'West', tier: 2 },
+
+  // South
+  { code: 'KA01', name: 'Bangalore - Central', region: 'South', tier: 1 },
+  { code: 'KA02', name: 'Bangalore - North', region: 'South', tier: 1 },
+  { code: 'KA03', name: 'Bangalore - South', region: 'South', tier: 1 },
+  { code: 'TN01', name: 'Chennai', region: 'South', tier: 1 },
+  { code: 'TN02', name: 'Coimbatore', region: 'South', tier: 2 },
+  { code: 'AP01', name: 'Hyderabad', region: 'South', tier: 1 },
+  { code: 'AP02', name: 'Visakhapatnam', region: 'South', tier: 2 },
+  { code: 'KL01', name: 'Kochi', region: 'South', tier: 2 },
+
+  // East
+  { code: 'WB01', name: 'Kolkata', region: 'East', tier: 1 },
+  { code: 'OD01', name: 'Bhubaneswar', region: 'East', tier: 2 },
+  { code: 'JH01', name: 'Jamshedpur/Ranchi', region: 'East', tier: 2 },
+];
+
+export const getTerritoryName = (code: string) => {
+  const territory = TERRITORIES.find(t => t.code === code);
+  return territory ? territory.name : code;
+};
+
+export const getTerritoryByCode = (code: string) => {
+  return TERRITORIES.find(t => t.code === code);
+};
+
+export const getTerritoryInfo = (identifier: string) => {
+  if (!identifier) return null;
+  // Try finding by code
+  let territory = TERRITORIES.find(t => t.code.toUpperCase() === identifier.toUpperCase());
+  if (territory) return territory;
+  
+  // Try finding by name (case insensitive)
+  territory = TERRITORIES.find(t => t.name.toLowerCase() === identifier.toLowerCase());
+  return territory || null;
+};

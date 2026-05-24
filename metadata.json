@@ -1,0 +1,12 @@
+{
+  "name": "Wizdent SFA CRM",
+  "description": "Specialized Field Sales Automation and Visit Management for dental product distribution.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "CRM",
+    "Field Sales Tracking",
+    "Product Catalog"
+  ]
+}
