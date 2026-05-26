@@ -99,6 +99,30 @@ export default function Users() {
     return matchesSearch && matchesRole;
   });
 
+  if (profile?.role === UserRole.MANAGER) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-6">
+        <div className="bg-slate-900 border border-slate-800 p-12 rounded-[2.5rem] text-center space-y-6 shadow-2xl text-white">
+          <Shield className="w-16 h-16 text-rose-500 mx-auto animate-pulse" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white">Security Access Warning</h2>
+            <p className="text-slate-400 text-sm font-medium">
+              Sales Managers are restricted from accessing the Team Directory/active personnel database to maintain compliance with resource allocation guidelines.
+            </p>
+          </div>
+          <div className="pt-4">
+            <Link 
+              to="/" 
+              className="inline-block bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-8 py-3.5 rounded-2xl uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
+            >
+              Return to Center
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 md:px-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-8">

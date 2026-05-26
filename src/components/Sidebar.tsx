@@ -24,19 +24,29 @@ import { cn } from '../lib/utils';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 
-const navItems = [
+const operationalItems = [
   { icon: LayoutDashboard, label: 'Command Center', path: '/' },
   { icon: User, label: 'My Profile', path: '/profile' },
   { icon: Building2, label: 'Account Management', path: '/accounts' },
   { icon: Users, label: 'Contact Management', path: '/contacts' },
   { icon: Users, label: 'Team Directory', path: '/users' },
   { icon: BarChart3, label: 'Analytics Reports', path: '/reports' },
+];
+
+const supplyChainItems = [
   { icon: Car, label: 'Visit Planning', path: '/visits' },
   { icon: Package, label: 'Product Catalog', path: '/products' },
 ];
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const { profile } = useAuth();
+
+  const filteredOperationalItems = operationalItems.filter(item => {
+    if (item.path === '/users' && profile?.role === 'MANAGER') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <aside className="w-64 bg-slate-950 flex flex-col border-r border-slate-800 text-slate-400 h-screen overflow-hidden">
@@ -57,7 +67,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
       <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
         <div className="px-3 py-2 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Operational Hub</div>
-        {navItems.slice(0, 6).map((item) => (
+        {filteredOperationalItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -96,7 +106,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         )}
 
         <div className="pt-6 px-3 py-2 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Supply Chain</div>
-        {navItems.slice(6).map((item) => (
+        {supplyChainItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

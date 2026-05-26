@@ -43,7 +43,7 @@ interface UserProfile {
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,6 +132,30 @@ export default function UserDetail() {
       setActionLoading(false);
     }
   };
+
+  if (isManager) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-6">
+        <div className="bg-slate-900 border border-slate-800 p-12 rounded-[2.5rem] text-center space-y-6 shadow-2xl text-white">
+          <Shield className="w-16 h-16 text-rose-500 mx-auto animate-pulse" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white">Security Access Warning</h2>
+            <p className="text-slate-400 text-sm font-medium">
+              Sales Managers are restricted from accessing individual user details and the Team Directory to maintain compliance with resource allocation guidelines.
+            </p>
+          </div>
+          <div className="pt-4">
+            <button 
+              onClick={() => navigate('/')}
+              className="inline-block bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-8 py-3.5 rounded-2xl uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
+            >
+              Return to Center
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
