@@ -46,6 +46,15 @@ import { cn, handleFirestoreError, OperationType, parseSafeDate } from '../lib/u
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { TERRITORIES, getTerritoryName } from '../constants';
+import { 
+  calculateDuration, 
+  updateSoldItemLogic, 
+  updateProductItemLogic,
+  createSoldItemTemplate,
+  createDemoItemTemplate,
+  createFreeItemTemplate,
+  createDiscussedItemTemplate
+} from '../lib/visit-utils';
 
 export default function VisitDetail() {
   const { id } = useParams<{ id: string }>();
@@ -180,12 +189,6 @@ export default function VisitDetail() {
     }
   };
 
-  const calculateDuration = (start: string, end: string) => {
-    const startTime = new Date(start).getTime();
-    const endTime = new Date(end).getTime();
-    return Math.round((endTime - startTime) / (1000 * 60));
-  };
-
   const handleCheckOut = async () => {
     if (!visit || !id) return;
     setActionLoading(true);
@@ -272,59 +275,25 @@ export default function VisitDetail() {
   };
 
   // Product editing helpers
-  const addSoldItem = () => setSoldProducts([...soldProducts, { productId: '', quantity: 1, price: 0, listPrice: 0, resellerCost: 0 }]);
+  const addSoldItem = () => setSoldProducts([...soldProducts, createSoldItemTemplate()]);
   const removeSoldItem = (idx: number) => setSoldProducts(soldProducts.filter((_, i) => i !== idx));
-  const updateSoldItem = (idx: number, field: string, val: any) => {
-    const news = [...soldProducts];
-    news[idx] = { ...news[idx], [field]: val };
-    if (field === 'productId') {
-      const p = products.find(p => p.id === val);
-      if (p) {
-        news[idx].productName = p.name;
-        news[idx].brandName = p.brand;
-        news[idx].price = p.dentistPrice || 0;
-        news[idx].listPrice = p.standardPrice || 0;
-        news[idx].resellerCost = p.resellerPrice || 0;
-      }
-    }
-    setSoldProducts(news);
-  };
+  const updateSoldItem = (idx: number, field: string, val: any) => 
+    setSoldProducts(updateSoldItemLogic(soldProducts, idx, field, val, products));
 
-  const addDemoItem = () => setDemoProducts([...demoProducts, { productId: '', quantity: 1, remarks: '' }]);
+  const addDemoItem = () => setDemoProducts([...demoProducts, createDemoItemTemplate()]);
   const removeDemoItem = (idx: number) => setDemoProducts(demoProducts.filter((_, i) => i !== idx));
-  const updateDemoItem = (idx: number, field: string, val: any) => {
-    const news = [...demoProducts];
-    news[idx] = { ...news[idx], [field]: val };
-    if (field === 'productId') {
-      const p = products.find(p => p.id === val);
-      if (p) news[idx].productName = p.name;
-    }
-    setDemoProducts(news);
-  };
+  const updateDemoItem = (idx: number, field: string, val: any) => 
+    setDemoProducts(updateProductItemLogic(demoProducts, idx, field, val, products));
 
-  const addFreeItem = () => setFreeProducts([...freeProducts, { productId: '', quantity: 1, type: 'SAMPLE' }]);
+  const addFreeItem = () => setFreeProducts([...freeProducts, createFreeItemTemplate()]);
   const removeFreeItem = (idx: number) => setFreeProducts(freeProducts.filter((_, i) => i !== idx));
-  const updateFreeItem = (idx: number, field: string, val: any) => {
-    const news = [...freeProducts];
-    news[idx] = { ...news[idx], [field]: val };
-    if (field === 'productId') {
-      const p = products.find(p => p.id === val);
-      if (p) news[idx].productName = p.name;
-    }
-    setFreeProducts(news);
-  };
+  const updateFreeItem = (idx: number, field: string, val: any) => 
+    setFreeProducts(updateProductItemLogic(freeProducts, idx, field, val, products));
 
-  const addDiscussedItem = () => setDiscussedProducts([...discussedProducts, { productId: '', remarks: '' }]);
+  const addDiscussedItem = () => setDiscussedProducts([...discussedProducts, createDiscussedItemTemplate()]);
   const removeDiscussedItem = (idx: number) => setDiscussedProducts(discussedProducts.filter((_, i) => i !== idx));
-  const updateDiscussedItem = (idx: number, field: string, val: any) => {
-    const news = [...discussedProducts];
-    news[idx] = { ...news[idx], [field]: val };
-    if (field === 'productId') {
-      const p = products.find(p => p.id === val);
-      if (p) news[idx].productName = p.name;
-    }
-    setDiscussedProducts(news);
-  };
+  const updateDiscussedItem = (idx: number, field: string, val: any) => 
+    setDiscussedProducts(updateProductItemLogic(discussedProducts, idx, field, val, products));
 
   if (loading) {
     return (
