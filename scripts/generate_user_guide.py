@@ -153,6 +153,13 @@ r = meta2.add_run("Document generated 5 June 2026  •  Web application (React +
 r.font.size = Pt(9)
 r.font.color.rgb = SLATE
 
+repo = doc.add_paragraph()
+repo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = repo.add_run("Repository:  ")
+r.bold = True; r.font.size = Pt(10); r.font.color.rgb = NAVY
+r = repo.add_run("https://github.com/NEMESIS-11/Wizdent-MVP")
+r.font.size = Pt(10); r.font.color.rgb = BLUE
+
 doc.add_paragraph()
 
 # =====================================================================
@@ -510,6 +517,9 @@ add_steps([
 # 9. NOTES / TIPS
 # =====================================================================
 add_heading("9.  Notes, Tips & Troubleshooting", 1)
+add_body("Source code repository: https://github.com/NEMESIS-11/Wizdent-MVP — clone or download it "
+         "from here, then follow RUNNING_LOCALLY.md in the repo to run the app on your own machine.",
+         bullet=True, size=10, color=BLUE)
 add_body("Deployment ownership. The current live site is hosted on the owner's personal server / "
          "Firebase account for demo only. For real company use, clone the repo locally and deploy a fresh "
          "copy to the company's own Firebase project and servers (see the project README for steps).",

@@ -2,6 +2,12 @@
 
 **Field Sales Automation & Visit Management for dental-product distribution.**
 
+**Repository:** https://github.com/NEMESIS-11/Wizdent-MVP
+
+```bash
+git clone https://github.com/NEMESIS-11/Wizdent-MVP.git
+```
+
 Wizdent is a web app that lets field sales reps (Dealers) plan and run visits to dental
 clinics — logging products sold, demoed and sampled, with GPS-verified check-in / check-out —
 while Managers track their territory and Admins run the whole system (team, catalog, master data).
@@ -54,7 +60,10 @@ Access is enforced both in the UI and by **Firestore security rules** (see [`fir
 
 ## 🚀 Run locally
 
-**Prerequisites:** [Node.js](https://nodejs.org/) 18+ (and npm).
+> 📖 New to the project? See **[RUNNING_LOCALLY.md](RUNNING_LOCALLY.md)** for a detailed,
+> every-step setup & troubleshooting guide. The quick version is below.
+
+**Prerequisites:** [Node.js](https://nodejs.org/) 20.19+ (and npm).
 
 ```bash
 # 1. Install dependencies
