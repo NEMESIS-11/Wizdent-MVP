@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  REGIONS, 
-  getStatesByRegion, 
-  getTerritoriesByState 
-} from '../../constants';
+import {
+  REGIONS,
+  getStatesByRegion,
+  getTerritoriesByState
+} from './constants';
 
 interface CreateManagerProps {
   onSave: (data: {

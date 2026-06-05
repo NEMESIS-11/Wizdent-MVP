@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { UserRole, AccountType } from '../types';
 import { Plus, User, Shield, Key, Mail, Building2, Save, CheckCircle2, AlertCircle, Loader2, FileSpreadsheet, Search, MapPin, ShieldCheck, ExternalLink, Users as UsersIcon, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { auth, db } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { collection, getDocs, query, collectionGroup } from 'firebase/firestore';
+import { provisionUser } from '../lib/provisionUser';
 import { cn } from '../lib/utils';
 import { TERRITORIES, getTerritoryName } from '../constants';
 import BulkImporter from '../components/BulkImporter';
@@ -48,25 +49,14 @@ export default function AdminManagement() {
     setError(null);
 
     try {
-      const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) throw new Error("Authentication error");
-
-      const response = await fetch('/api/admin/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-        },
-        body: JSON.stringify(formData),
+      await provisionUser({
+        email: formData.email,
+        password: formData.password,
+        displayName: formData.displayName,
+        role: formData.role,
+        dealerCode: formData.dealerCode,
+        territory: formData.territory,
       });
-
-      const data = await response.json();
-      if (!response.ok) {
-        if (data.error === "EMAIL_EXISTS") {
-          throw new Error("This email is already registered in Auth. If you want to link it to the directory, make sure you used the correct password, or contact system admin.");
-        }
-        throw new Error(data.message || data.error || "Failed to create user");
-      }
 
       setSuccess(`User ${formData.email} created successfully!`);
       setFormData({
@@ -78,7 +68,11 @@ export default function AdminManagement() {
         territory: '',
       });
     } catch (err: any) {
-      setError(err.message);
+      if (err.message === "EMAIL_EXISTS") {
+        setError("This email is already registered in Auth. To link it to the directory, re-enter the user's exact existing password.");
+      } else {
+        setError(err.message || "Failed to create user");
+      }
     } finally {
       setLoading(false);
     }
@@ -111,45 +105,34 @@ export default function AdminManagement() {
               setSuccess(null);
               
               try {
-                const idToken = await auth.currentUser?.getIdToken();
-                if (!idToken) throw new Error("Auth token not found. Please re-login.");
-                
                 const accSnap = await getDocs(collection(db, 'accounts'));
                 const dealers = accSnap.docs
                   .map(d => ({ id: d.id, ...d.data() } as any))
                   .filter(a => a.type === AccountType.DEALER);
-                
+
                 const results: ProvisionResult[] = [];
                 for (const d of dealers) {
                   const slug = (d.name || 'dealer').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
                   const email = `${slug}@gmail.com`;
-                  
+
                   try {
-                    const res = await fetch('/api/admin/create-user', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}`,
-                      },
-                      body: JSON.stringify({
-                        email,
-                        password: '12345678',
-                        displayName: d.name,
-                        role: UserRole.DEALER,
-                        dealerId: d.id,
-                        dealerCode: d.dealerCode || "",
-                        territory: d.territory || ""
-                      }),
+                    await provisionUser({
+                      email,
+                      password: '12345678',
+                      displayName: d.name,
+                      role: UserRole.DEALER,
+                      dealerId: d.id,
+                      dealerCode: d.dealerCode || "",
+                      territory: d.territory || ""
                     });
-                    
-                    const data = await res.json();
-                    if (res.ok) {
-                      results.push({ name: d.name, email, status: 'success' });
-                    } else {
-                      results.push({ name: d.name, email, status: 'error', message: data.error || 'Unknown error' });
-                    }
+                    results.push({ name: d.name, email, status: 'success' });
                   } catch (e: any) {
-                    results.push({ name: d.name, email, status: 'error', message: e.message });
+                    results.push({
+                      name: d.name,
+                      email,
+                      status: 'error',
+                      message: e.message === 'EMAIL_EXISTS' ? 'Already registered (password mismatch)' : e.message
+                    });
                   }
                   setProvisionResults([...results]);
                 }
