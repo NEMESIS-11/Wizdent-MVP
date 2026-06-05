@@ -1,3 +1,38 @@
+export interface Region {
+  code: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST';
+  name: string;
+}
+
+export interface State {
+  code: string;
+  name: string;
+  regionCode: Region['code'];
+}
+
+export const REGIONS: Region[] = [
+  { code: 'NORTH', name: 'North' },
+  { code: 'WEST', name: 'West' },
+  { code: 'SOUTH', name: 'South' },
+  { code: 'EAST', name: 'East' },
+];
+
+export const STATES: State[] = [
+  { code: 'DL', name: 'Delhi', regionCode: 'NORTH' },
+  { code: 'UP', name: 'Uttar Pradesh', regionCode: 'NORTH' },
+  { code: 'PB', name: 'Punjab', regionCode: 'NORTH' },
+  { code: 'RJ', name: 'Rajasthan', regionCode: 'NORTH' },
+  { code: 'MH', name: 'Maharashtra', regionCode: 'WEST' },
+  { code: 'GJ', name: 'Gujarat', regionCode: 'WEST' },
+  { code: 'MP', name: 'Madhya Pradesh', regionCode: 'WEST' },
+  { code: 'KA', name: 'Karnataka', regionCode: 'SOUTH' },
+  { code: 'TN', name: 'Tamil Nadu', regionCode: 'SOUTH' },
+  { code: 'AP', name: 'Andhra Pradesh', regionCode: 'SOUTH' },
+  { code: 'KL', name: 'Kerala', regionCode: 'SOUTH' },
+  { code: 'WB', name: 'West Bengal', regionCode: 'EAST' },
+  { code: 'OD', name: 'Odisha', regionCode: 'EAST' },
+  { code: 'JH', name: 'Jharkhand', regionCode: 'EAST' },
+];
+
 export interface Territory {
   code: string;
   name: string;
@@ -50,6 +85,25 @@ export const TERRITORIES: Territory[] = [
 export const getTerritoryName = (code: string) => {
   const territory = TERRITORIES.find(t => t.code === code);
   return territory ? territory.name : code;
+};
+
+export const getStatesByRegion = (regionCode: string) => {
+  return STATES.filter(s => s.regionCode === regionCode);
+};
+
+export const getTerritoriesByState = (stateCode: string) => {
+  return TERRITORIES.filter(t => t.code.startsWith(stateCode));
+};
+
+export const getStateCode = (territoryCode: string) => {
+  if (!territoryCode || territoryCode.length < 2) return null;
+  return territoryCode.substring(0, 2).toUpperCase();
+};
+
+export const getRegionByTerritoryCode = (code: string) => {
+  const stateCode = getStateCode(code);
+  const state = STATES.find(s => s.code === stateCode);
+  return state ? state.regionCode : null;
 };
 
 export const getTerritoryByCode = (code: string) => {

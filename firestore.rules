@@ -39,12 +39,13 @@ service cloud.firestore {
       return isSignedIn() && hasRole('DEALER');
     }
 
-    function canViewByTerritory(targetTerritory) {
-      let userTerritory = getUserData().get('territory', '');
-      return userTerritory != '' && 
-             targetTerritory is string && 
-             targetTerritory.size() >= userTerritory.size() && 
-             targetTerritory[0:userTerritory.size()] == userTerritory;
+    function hasDataVisibility(data) {
+      let user = getUserData();
+      return isAdmin() ||
+             (user.role == 'RSM' && data.region == user.region) ||
+             (user.role == 'STATE_MANAGER' && data.stateCode == user.stateCode) ||
+             (user.role == 'ASM' && data.territory == user.territory) ||
+             (user.role == 'DEALER' && data.dealerUid == request.auth.uid);
     }
 
     // --- VALIDATION HELPERS ---
@@ -88,7 +89,7 @@ service cloud.firestore {
     }
 
     match /accounts/{accountId} {
-      allow read: if isSignedIn(); // Allow all signed in users to read accounts
+      allow read: if isSignedIn() && hasDataVisibility(resource.data);
       allow create: if isSignedIn() && (isValidAccount(incoming()) || isAdmin());
       allow update: if isManager() || isAdmin();
       allow delete: if isAdmin();
@@ -110,7 +111,7 @@ service cloud.firestore {
     }
 
     match /visits/{visitId} {
-      allow read: if isSignedIn(); // Broaden read for visits, query filters handle view logic
+      allow read: if isSignedIn() && hasDataVisibility(resource.data);
       allow create: if isSignedIn() && (incoming().dealerUid == request.auth.uid || isAdmin()) && isValidVisit(incoming());
       allow update: if isSignedIn() && (existing().dealerUid == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
